@@ -132,3 +132,84 @@ def test_cli_build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys) -> N
     monkeypatch.setattr(release.build_zip, "__defaults__", (release.COMPONENT, tmp_path))
     assert release.main(["build", "26.11.7"]) == 0
     assert capsys.readouterr().out.strip().endswith("octa_ev_charger.zip")
+
+
+# --- release notes ----------------------------------------------------------------------------
+
+REPO = "https://github.com/o/r"
+
+
+def test_render_notes_groups_by_prefix() -> None:
+    commits = [
+        ("a" * 40, "[core]: support 3 ports", "me"),
+        ("b" * 40, "[ops] add icon", "me"),
+        ("c" * 40, "[core]: fix polling", "me"),
+        ("d" * 40, "Bump actions/checkout from 6 to 7", "dependabot[bot]"),
+        ("e" * 40, "tidy README", "me"),
+    ]
+    notes = release.render_notes("26.11.4", "26.11.3", commits, REPO)
+    assert notes == (
+        "### Core\n\n"
+        f"- support 3 ports ([`aaaaaaa`]({REPO}/commit/{'a' * 40}))\n"
+        f"- fix polling ([`ccccccc`]({REPO}/commit/{'c' * 40}))\n\n"
+        "### Ops\n\n"
+        f"- add icon ([`bbbbbbb`]({REPO}/commit/{'b' * 40}))\n\n"
+        "### Other\n\n"
+        f"- tidy README ([`eeeeeee`]({REPO}/commit/{'e' * 40}))\n\n"
+        "### Dependencies\n\n"
+        f"- Bump actions/checkout from 6 to 7 ([`ddddddd`]({REPO}/commit/{'d' * 40}))\n\n"
+        f"**Full changelog:** {REPO}/compare/26.11.3...26.11.4\n"
+    )
+
+
+def test_render_notes_first_release_and_no_repo() -> None:
+    notes = release.render_notes("26.11.0", None, [("f" * 40, "[core]: initial commit", "me")])
+    assert notes == "### Core\n\n- initial commit (`fffffff`)\n"
+    first = release.render_notes("26.11.0", None, [], REPO)
+    assert "No changes since the previous release." in first
+    assert first.endswith(f"{REPO}/commits/26.11.0\n")
+
+
+def test_repo_url_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("GITHUB_REPOSITORY", raising=False)
+    assert release.repo_url_from_env() is None
+    monkeypatch.setenv("GITHUB_SERVER_URL", "https://github.com")
+    monkeypatch.setenv("GITHUB_REPOSITORY", "o/r")
+    assert release.repo_url_from_env() == "https://github.com/o/r"
+
+
+def test_notes_from_real_git_history(tmp_path: Path) -> None:
+    """Only commits after the last release tag end up in the notes; merges are skipped."""
+
+    def git(*args: str) -> None:
+        subprocess.run(
+            ["git", "-c", "user.name=me", "-c", "user.email=me@x", *args],
+            cwd=tmp_path,
+            check=True,
+            capture_output=True,
+        )
+
+    git("init", "-q", "-b", "main")
+    git("commit", "-q", "--allow-empty", "-m", "[core]: initial commit")
+    assert release.previous_tag(cwd=tmp_path) is None
+    git("tag", "26.11.0")
+    git("tag", "not-a-release")
+    git("commit", "-q", "--allow-empty", "-m", "[core]: add ports")
+    git("checkout", "-q", "-b", "feature")
+    git("commit", "-q", "--allow-empty", "-m", "[ops]: tweak CI")
+    git("checkout", "-q", "main")
+    git("merge", "-q", "--no-ff", "feature", "-m", "Merge branch 'feature'")
+
+    previous = release.previous_tag(cwd=tmp_path)
+    assert previous == "26.11.0"
+    subjects = [s for _, s, _ in release.commits_since(previous, cwd=tmp_path)]
+    assert subjects == ["[core]: add ports", "[ops]: tweak CI"]
+    assert len(release.commits_since(None, cwd=tmp_path)) == 3
+
+
+def test_cli_notes(monkeypatch: pytest.MonkeyPatch, capsys) -> None:
+    monkeypatch.setattr(release, "previous_tag", lambda: "26.11.1")
+    monkeypatch.setattr(release, "commits_since", lambda tag: [("a" * 40, "[core]: thing", "me")])
+    monkeypatch.setattr(release, "repo_url_from_env", lambda: None)
+    assert release.main(["notes", "26.11.2"]) == 0
+    assert capsys.readouterr().out == "### Core\n\n- thing (`aaaaaaa`)\n"

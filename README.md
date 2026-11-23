@@ -197,8 +197,13 @@ Versions are calendar-based: `YY.MM.PATCH`, for example `26.11.3`.
   (`26.11.0`).
 - **Every push to `main`** runs the tests and validation. If they pass, the
   [Release workflow](.github/workflows/release.yml) tags the commit with the next free patch
-  (`26.11.0`, `26.11.1`, …) and publishes a GitHub release with generated notes and
-  `octa_ev_charger.zip`. The zip's manifest carries that exact version.
+  (`26.11.0`, `26.11.1`, …) and publishes a GitHub release with `octa_ev_charger.zip`. The zip's
+  manifest carries that exact version.
+- **Release notes** are built from the commit messages since the previous release, grouped by
+  their prefix, so write commit subjects as you'd want them in the notes:
+  `[core]: support stations with 3 ports` lands under **Core**, `[ops]: …` under **Ops**,
+  Dependabot updates under **Dependencies**, and anything without a prefix under **Other**.
+  [CHANGELOG.md](CHANGELOG.md) only points to the Releases page, so it never goes stale.
 - **To start a new series,** change the manifest version to e.g. `26.12.0` and push. Patches
   restart at `26.12.0`.
 - Re-running the workflow on an already-released commit does nothing.
@@ -208,6 +213,7 @@ The logic is in [`script/release.py`](script/release.py) and covered by `tests/t
 ```bash
 python script/release.py next-version   # what the next push would release
 python script/release.py build 26.11.5  # build dist/octa_ev_charger.zip locally
+python script/release.py notes 26.11.5  # preview the release notes for unreleased commits
 ```
 
 ## License

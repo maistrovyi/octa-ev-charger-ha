@@ -6,6 +6,7 @@ e.g. "26.11.0" -> baseline "26.11". Each release tags the next free patch:
 
     python script/release.py next-version     # prints e.g. 26.11.3
     python script/release.py build 26.11.3    # writes dist/octa_ev_charger.zip
+    python script/release.py notes 26.11.3    # release notes from commits since the last tag
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from __future__ import annotations
 import argparse
 from collections.abc import Iterable
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -26,6 +28,9 @@ DIST = ROOT / "dist"
 
 RE_BASELINE = re.compile(r"^(\d{2})\.(\d{1,2})$")
 RE_VERSION = re.compile(r"^(\d{2})\.(\d{1,2})\.(\d+)$")
+# Commit subjects like "[ops]: add icon" or "[core] fix polling".
+RE_PREFIX = re.compile(r"^\[([^\]]+)\]:?\s*(.+)$")
+BOTS = ("dependabot[bot]", "github-actions[bot]")
 
 
 def baseline_from_manifest(manifest_version: str) -> str:
@@ -63,6 +68,67 @@ def git_tags() -> list[str]:
     return out.stdout.split()
 
 
+def _git(*args: str, cwd: Path = ROOT) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True)
+
+
+def previous_tag(cwd: Path = ROOT) -> str | None:
+    """Most recent release tag reachable from HEAD (None for the first release)."""
+    out = _git(
+        "describe", "--tags", "--abbrev=0", "--match", "[0-9]*.[0-9]*.[0-9]*", "HEAD", cwd=cwd
+    )
+    tag = out.stdout.strip()
+    return tag if out.returncode == 0 and RE_VERSION.match(tag) else None
+
+
+def commits_since(tag: str | None, cwd: Path = ROOT) -> list[tuple[str, str, str]]:
+    """(sha, subject, author) for commits after `tag` up to HEAD, oldest first, no merges."""
+    rev = f"{tag}..HEAD" if tag else "HEAD"
+    out = _git(
+        "log", "--no-merges", "--topo-order", "--reverse", "--format=%H%x1f%s%x1f%an", rev, cwd=cwd
+    )
+    if out.returncode:
+        raise SystemExit(f"git log failed: {out.stderr.strip()}")
+    return [tuple(line.split("\x1f", 2)) for line in out.stdout.splitlines() if line]
+
+
+def render_notes(
+    version: str,
+    previous: str | None,
+    commits: list[tuple[str, str, str]],
+    repo_url: str | None = None,
+) -> str:
+    """Markdown release notes, grouped by the commit prefix ([core], [ops], ...)."""
+    groups: dict[str, list[str]] = {}
+    for sha, subject, author in commits:
+        if author in BOTS or subject.startswith(("Bump ", "build(deps)")):
+            section, text = "Dependencies", subject
+        elif match := RE_PREFIX.match(subject):
+            section, text = match.group(1).strip().capitalize(), match.group(2).strip()
+        else:
+            section, text = "Other", subject
+        ref = f"[`{sha[:7]}`]({repo_url}/commit/{sha})" if repo_url else f"`{sha[:7]}`"
+        groups.setdefault(section, []).append(f"- {text} ({ref})")
+
+    order = sorted(groups, key=lambda s: (s in ("Other", "Dependencies"), s == "Dependencies", s))
+    lines: list[str] = []
+    for section in order:
+        lines += [f"### {section}", "", *groups[section], ""]
+    if not commits:
+        lines += ["No changes since the previous release.", ""]
+    if repo_url and previous:
+        lines.append(f"**Full changelog:** {repo_url}/compare/{previous}...{version}")
+    elif repo_url:
+        lines.append(f"**Full changelog:** {repo_url}/commits/{version}")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def repo_url_from_env() -> str | None:
+    """https://github.com/owner/repo inside GitHub Actions, otherwise None."""
+    server, repo = os.environ.get("GITHUB_SERVER_URL"), os.environ.get("GITHUB_REPOSITORY")
+    return f"{server}/{repo}" if server and repo else None
+
+
 def build_zip(version: str, component: Path = COMPONENT, dist: Path = DIST) -> Path:
     """Zip the integration for HACS (files at the zip root), with the manifest version set."""
     if not RE_VERSION.match(version):
@@ -89,11 +155,19 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("next-version", help="print the next version to release")
     build = sub.add_parser("build", help="write dist/octa_ev_charger.zip")
     build.add_argument("version")
+    notes = sub.add_parser("notes", help="print release notes since the previous tag")
+    notes.add_argument("version")
     args = parser.parse_args(argv)
 
     if args.command == "next-version":
         baseline = baseline_from_manifest(read_manifest_version())
         print(next_version(baseline, git_tags()))
+    elif args.command == "notes":
+        previous = previous_tag()
+        print(
+            render_notes(args.version, previous, commits_since(previous), repo_url_from_env()),
+            end="",
+        )
     else:
         print(build_zip(args.version))
     return 0
