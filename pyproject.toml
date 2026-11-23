@@ -1,0 +1,55 @@
+[project]
+name = "octa-ev-charger-ha"
+version = "1.0.0"
+description = "Home Assistant custom integration for EV charging stations with the Home Assistant station API"
+requires-python = ">=3.13.2"
+license = "MIT"
+readme = "README.md"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-p no:cacheprovider"
+
+[tool.coverage.run]
+source = ["custom_components/octa_ev_charger"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 95
+
+[tool.ruff]
+target-version = "py313"  # HA 2025.8–2026.2 still run on Python 3.13
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+  "A",     # builtins
+  "ASYNC", # async pitfalls
+  "B",     # bugbear
+  "C4",    # comprehensions
+  "E",     # pycodestyle
+  "F",     # pyflakes
+  "I",     # isort
+  "PT",    # pytest style
+  "RUF",   # ruff-specific
+  "SIM",   # simplify
+  "UP",    # pyupgrade
+  "W",     # pycodestyle warnings
+]
+ignore = [
+  "PT011",   # broad pytest.raises in one intentional place
+  "B017",    # same
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["custom_components.octa_ev_charger"]
+force-sort-within-sections = true
+combine-as-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+# Ukrainian text is intentional, not look-alike Latin letters.
+"tests/test_translations.py" = ["RUF001"]

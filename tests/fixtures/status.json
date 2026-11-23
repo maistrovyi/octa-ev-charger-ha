@@ -1,0 +1,47 @@
+{
+  "online": true,
+  "ports": {
+    "1": {
+      "status": "Charging",
+      "scenario": "manual",
+      "charging": true,
+      "current_limit_a": null,
+      "current_max_a": 32,
+      "power_kw": {"value": 7.2},
+      "current_a": {"value": 31.5},
+      "current_l1_a": {"value": 31.5},
+      "current_l2_a": {"value": null},
+      "current_l3_a": null,
+      "voltage_v": {"value": 230.1},
+      "voltage_l1_v": {"value": 230.1},
+      "voltage_l2_v": {"value": null},
+      "voltage_l3_v": {"value": null},
+      "current_offered_a": {"value": 32},
+      "temperature_c": {"value": 41},
+      "soc_percent": {"value": 55},
+      "session_energy_kwh": 3.4,
+      "energy_total_kwh": 1234.5
+    },
+    "2": {
+      "status": "Available",
+      "scenario": null,
+      "charging": false,
+      "current_limit_a": 10,
+      "current_max_a": 16,
+      "power_kw": {"value": 0},
+      "current_a": {"value": 0},
+      "current_l1_a": {"value": 0},
+      "current_l2_a": {"value": 0},
+      "current_l3_a": {"value": 0},
+      "voltage_v": null,
+      "voltage_l1_v": null,
+      "voltage_l2_v": null,
+      "voltage_l3_v": null,
+      "current_offered_a": null,
+      "temperature_c": {"value": 20},
+      "soc_percent": null,
+      "session_energy_kwh": null,
+      "energy_total_kwh": 88.0
+    }
+  }
+}

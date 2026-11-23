@@ -1,0 +1,152 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Зарядна станція",
+        "description": "Підключіть станцію через Home Assistant API.",
+        "data": {
+          "host": "URL сервера",
+          "station_id": "ID станції",
+          "token": "API-токен"
+        },
+        "data_description": {
+          "host": "Базова адреса сервера, наприклад https://ev.example.com",
+          "station_id": "Як у шляху API …/stations/STATION_ID/status",
+          "token": "З префіксом \"Bearer \" або без нього. Для старту/стопу та ліміту струму потрібен токен рівня \"перегляд і керування\"."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Токен відхилено",
+        "description": "Сервер відхилив токен для станції {station}. Введіть новий.",
+        "data": {
+          "token": "API-токен"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Не вдалося підключитися до сервера, або він повернув помилку.",
+      "invalid_auth": "Токен відхилено."
+    },
+    "abort": {
+      "already_configured": "Цю станцію вже налаштовано.",
+      "reauth_successful": "Токен оновлено."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Опитування",
+        "data": {
+          "scan_interval": "Інтервал оновлення"
+        },
+        "data_description": {
+          "scan_interval": "Як часто отримувати стан станції, у секундах. Один запит оновлює всі сутності."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "charging": {
+        "name": "Порт {port} заряджає"
+      },
+      "online": {
+        "name": "На зв'язку"
+      },
+      "plugged_in": {
+        "name": "Порт {port} авто підключено"
+      },
+      "problem": {
+        "name": "Порт {port} несправність"
+      }
+    },
+    "button": {
+      "start": {
+        "name": "Порт {port} старт"
+      },
+      "stop": {
+        "name": "Порт {port} стоп"
+      }
+    },
+    "number": {
+      "current_limit": {
+        "name": "Порт {port} ліміт струму"
+      }
+    },
+    "sensor": {
+      "current": {
+        "name": "Порт {port} струм"
+      },
+      "current_l1": {
+        "name": "Порт {port} струм L1"
+      },
+      "current_l2": {
+        "name": "Порт {port} струм L2"
+      },
+      "current_l3": {
+        "name": "Порт {port} струм L3"
+      },
+      "current_limit": {
+        "name": "Порт {port} діючий ліміт струму"
+      },
+      "current_max": {
+        "name": "Порт {port} максимальний струм"
+      },
+      "current_offered": {
+        "name": "Порт {port} дозволений струм"
+      },
+      "energy_total": {
+        "name": "Порт {port} лічильник енергії"
+      },
+      "power": {
+        "name": "Порт {port} потужність"
+      },
+      "scenario": {
+        "name": "Порт {port} сценарій"
+      },
+      "session_energy": {
+        "name": "Порт {port} енергія сесії"
+      },
+      "soc": {
+        "name": "Порт {port} рівень заряду авто"
+      },
+      "status": {
+        "name": "Порт {port} статус"
+      },
+      "temperature": {
+        "name": "Порт {port} температура"
+      },
+      "total_power": {
+        "name": "Загальна потужність"
+      },
+      "voltage": {
+        "name": "Порт {port} напруга"
+      },
+      "voltage_l1": {
+        "name": "Порт {port} напруга L1"
+      },
+      "voltage_l2": {
+        "name": "Порт {port} напруга L2"
+      },
+      "voltage_l3": {
+        "name": "Порт {port} напруга L3"
+      }
+    },
+    "switch": {
+      "charging": {
+        "name": "Порт {port} зарядка"
+      }
+    }
+  },
+  "exceptions": {
+    "start_failed": {
+      "message": "Порт {port}: не вдалося запустити зарядку: {error}"
+    },
+    "stop_failed": {
+      "message": "Порт {port}: не вдалося зупинити зарядку: {error}"
+    },
+    "set_current_failed": {
+      "message": "Порт {port}: не вдалося встановити ліміт струму: {error}"
+    }
+  }
+}

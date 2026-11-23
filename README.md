@@ -1,0 +1,154 @@
+# Octa EV Charger for Home Assistant
+
+[![Tests](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/tests.yml/badge.svg)](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/tests.yml)
+[![Validate](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/validate.yml/badge.svg)](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/validate.yml)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
+
+Custom integration that connects an EV charging station to Home Assistant through the station's
+**Home Assistant API** (`/api/home-assistant/v1/stations/<station>/…`). Each station becomes one
+device with live readings, a charging switch and a current-limit slider per port.
+
+- Set up from the UI. No YAML needed.
+- One HTTP request per poll updates every entity, every 30 s by default (configurable).
+- Works with any number of ports the station reports.
+- Lifetime energy meters plug straight into the **Energy** dashboard.
+- Re-authentication prompt when the token is rejected, and diagnostics with secrets redacted.
+- English and Ukrainian (українська) translations.
+
+## Requirements
+
+- Home Assistant **2025.8** or newer.
+- The server URL, your station ID and an API token. Reading values needs a *view* token;
+  start/stop and current limit need a *view and control* token.
+
+## Installation
+
+### HACS (recommended)
+
+1. HACS → ⋮ → **Custom repositories** → add
+   `https://github.com/maistrovyi/octa-ev-charger-ha`, type **Integration**.
+2. Search for **Octa EV Charger**, install it, and restart Home Assistant.
+
+### Manual
+
+1. Download the latest release and copy `custom_components/octa_ev_charger/` into your
+   `/config/custom_components/` folder.
+2. Restart Home Assistant.
+
+## Configuration
+
+**Settings → Devices & services → Add integration → Octa EV Charger**
+
+| Field       | Example                  | Notes                                           |
+|-------------|--------------------------|-------------------------------------------------|
+| Server URL  | `https://ev.example.com` | `https://` is added if you leave it out.        |
+| Station ID  | `my-station`             | As it appears in `…/stations/<station ID>/…`.   |
+| API token   | `ha_…`                   | With or without the `Bearer ` prefix.           |
+
+Add the integration once per station. To change the polling interval, open the integration and
+click **Configure** (minimum 10 s).
+
+## Entities
+
+Entity IDs follow the device name: `<platform>.ev_station_<station_id>_<entity>`. For example, for
+station `my-station`, the port 1 power sensor is `sensor.ev_station_my_station_port_1_power`.
+
+**Station**
+
+| Entity        | Type          | Notes                                                   |
+|---------------|---------------|---------------------------------------------------------|
+| Online        | binary sensor | Off when the station is offline *or* the API is unreachable. |
+| Total power   | sensor (kW)   | Sum of all ports.                                       |
+
+**Per port** (`Port N …`)
+
+| Entity               | Type             | Notes |
+|----------------------|------------------|-------|
+| charging             | switch           | On = charging. Turning on/off sends start/stop. |
+| current limit        | number (A)       | Slider from 6 A to the port's `current_max_a`. |
+| charging             | binary sensor    | From the API's `charging` flag. |
+| plugged in           | binary sensor    | Derived from `status` (see below). |
+| problem              | binary sensor    | `Faulted` or `Unavailable`. Diagnostic. |
+| status               | sensor           | Raw status text, e.g. `Charging`. |
+| power                | sensor (kW)      | |
+| current              | sensor (A)       | |
+| current offered      | sensor (A)       | What the station currently allows the car to draw. |
+| voltage              | sensor (V)       | |
+| vehicle battery      | sensor (%)       | Only if the car reports it. |
+| session energy       | sensor (kWh)     | Resets each session. |
+| energy meter         | sensor (kWh)     | Lifetime total; use this in the Energy dashboard. |
+| active current limit | sensor (A)       | Saved limit, or the port maximum if none is saved. Diagnostic. |
+| max current          | sensor (A)       | Hardware maximum. Diagnostic. |
+| temperature          | sensor (°C)      | Diagnostic. |
+| scenario             | sensor           | Diagnostic. |
+| current L1–L3, voltage L1–L3 | sensors  | Disabled by default. Enable them on the device page. |
+| start, stop          | buttons          | Disabled by default; the switch does the same. |
+
+Values the station reports as `null` show as **unknown**, never as 0, so energy statistics are not
+corrupted by a glitch.
+
+### How "plugged in" is decided
+
+The API has no plug flag, so the integration reads the port `status` (case-insensitive):
+
+| Status                                                   | plugged in | problem |
+|----------------------------------------------------------|:----------:|:-------:|
+| `Available`                                              | off        | off     |
+| `Preparing`, `Charging`, `SuspendedEV`, `SuspendedEVSE`, `Finishing` | on | off |
+| `Faulted`, `Unavailable`                                 | off        | on      |
+
+These are the standard OCPP connector statuses. If your station reports different words, open an
+issue with a diagnostics file (see below).
+
+## Languages
+
+The setup screens, entity names and error messages are available in **English** and
+**Ukrainian**. They follow the language set under *Settings → System → General*. Entity IDs are
+always generated in English (`…_port_1_power`), so automations work in any language.
+
+To add a language, copy `custom_components/octa_ev_charger/translations/en.json` to `<code>.json`
+(for example `pl.json`), translate the values, keep every `{placeholder}`, and open a pull request.
+The tests check that every language has the same keys and placeholders as English.
+
+## Energy dashboard
+
+**Settings → Dashboards → Energy → Add consumption** and pick
+`sensor.ev_station_<station_id>_port_N_energy_meter`. For daily/monthly totals, create a
+**Utility Meter** helper from the same sensor.
+
+## Example automations
+
+See [`examples/automations.yaml`](examples/automations.yaml): night-time start at 23:00 only when a
+car is plugged in, a notification when a car is connected or a session finishes, and an alert when
+the station goes offline or reports a fault.
+
+## Troubleshooting
+
+- **Download diagnostics:** Settings → Devices & services → Octa EV Charger → ⋮ → *Download
+  diagnostics*. Server URL, station ID and token are redacted, so the file is safe to attach to an issue.
+- **Debug logging:**
+  ```yaml
+  logger:
+    logs:
+      custom_components.octa_ev_charger: debug
+  ```
+- **"Token rejected" notification:** create a new token and enter it in the prompt Home Assistant shows.
+- **Start/stop fails:** the token needs *view and control* rights.
+
+## Development
+
+```bash
+python3.14 -m venv .venv && source .venv/bin/activate
+pip install -r requirements_test.txt
+ruff check . && ruff format --check .
+pytest --cov
+```
+
+CI runs the tests on the newest Home Assistant supported by
+[`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component)
+and on the oldest supported release (2025.8, Python 3.13), plus `hassfest` and the HACS
+validator. Code must stay Python 3.13-compatible, which ruff enforces via `target-version`.
+
+## License
+
+[MIT](LICENSE)

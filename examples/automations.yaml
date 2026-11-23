@@ -1,0 +1,95 @@
+# Example automations for the Octa EV Charger integration.
+# Put this file in /config/packages/ (with `homeassistant: packages: !include_dir_named packages`)
+# and replace `my_station` with your device's entity prefix
+# (entity IDs look like switch.ev_station_<station_id>_port_1_charging).
+# Notifications use persistent_notification; swap for notify.mobile_app_<phone> if you like.
+
+automation ev_charger_examples:
+  - id: ev_charger_p1_night_start
+    alias: "EV Charger port 1: start at 23:00"
+    triggers:
+      - trigger: time
+        at: "23:00:00"
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.ev_station_my_station_port_1_plugged_in
+        state: "on"
+      - condition: state
+        entity_id: switch.ev_station_my_station_port_1_charging
+        state: "off"
+    actions:
+      - action: switch.turn_on
+        target:
+          entity_id: switch.ev_station_my_station_port_1_charging
+        continue_on_error: true
+      - delay: 30
+      - if:
+          - condition: state
+            entity_id: switch.ev_station_my_station_port_1_charging
+            state: "on"
+        then:
+          - action: persistent_notification.create
+            data:
+              title: "EV Charger"
+              message: "Port 1: night charging started."
+        else:
+          - action: persistent_notification.create
+            data:
+              title: "EV Charger"
+              message: >-
+                Port 1: charging did not start (status:
+                {{ states('sensor.ev_station_my_station_port_1_status') }}).
+
+  - id: ev_charger_plugged_in
+    alias: "EV Charger: car plugged in"
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.ev_station_my_station_port_1_plugged_in
+          - binary_sensor.ev_station_my_station_port_2_plugged_in
+        from: "off"
+        to: "on"
+    actions:
+      - action: persistent_notification.create
+        data:
+          title: "EV Charger"
+          message: "{{ trigger.to_state.name }}: car connected."
+
+  - id: ev_charger_session_finished
+    alias: "EV Charger: charging finished"
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.ev_station_my_station_port_1_charging
+          - binary_sensor.ev_station_my_station_port_2_charging
+        from: "on"
+        to: "off"
+        for: "00:02:00"
+    variables:
+      port: "{{ '1' if 'port_1' in trigger.entity_id else '2' }}"
+    actions:
+      - action: persistent_notification.create
+        data:
+          title: "EV Charger"
+          message: >-
+            Port {{ port }} stopped charging.
+            Session: {{ states('sensor.ev_station_my_station_port_' ~ port ~ '_session_energy') }} kWh.
+
+  - id: ev_charger_alert
+    alias: "EV Charger: offline or fault"
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.ev_station_my_station_online
+        to: "off"
+        for: "00:10:00"
+      - trigger: state
+        entity_id:
+          - binary_sensor.ev_station_my_station_port_1_problem
+          - binary_sensor.ev_station_my_station_port_2_problem
+        to: "on"
+        for: "00:01:00"
+    actions:
+      - action: persistent_notification.create
+        data:
+          title: "EV Charger alert"
+          message: "{{ trigger.to_state.name }} → {{ trigger.to_state.state }}"

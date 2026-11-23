@@ -1,0 +1,48 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - run: pip install ruff==0.17.6
+      - run: ruff check .
+      - run: ruff format --check .
+
+  pytest:
+    name: pytest (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Newest Home Assistant the test harness supports.
+          - name: latest HA
+            python: "3.14"
+            install: -r requirements_test.txt
+            coverage: --cov --cov-report=term-missing
+          # Oldest supported release (hacs.json "homeassistant").
+          - name: HA 2025.8
+            python: "3.13"
+            install: homeassistant==2025.8.3 pytest-homeassistant-custom-component "pycares<5"
+            coverage: ""
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: pip install ${{ matrix.install }}
+      - run: python -m pytest ${{ matrix.coverage }}

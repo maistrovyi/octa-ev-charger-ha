@@ -1,0 +1,152 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "EV charging station",
+        "description": "Connect a station through its Home Assistant API.",
+        "data": {
+          "host": "Server URL",
+          "station_id": "Station ID",
+          "token": "API token"
+        },
+        "data_description": {
+          "host": "Base URL of the server, for example https://ev.example.com",
+          "station_id": "As it appears in the API path …/stations/STATION_ID/status",
+          "token": "With or without the \"Bearer \" prefix. Start/stop and current limit need a view-and-control token."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Token rejected",
+        "description": "The server rejected the token for station {station}. Enter a new one.",
+        "data": {
+          "token": "API token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach the server or it returned an error.",
+      "invalid_auth": "The token was rejected."
+    },
+    "abort": {
+      "already_configured": "This station is already set up.",
+      "reauth_successful": "Token updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Polling",
+        "data": {
+          "scan_interval": "Update interval"
+        },
+        "data_description": {
+          "scan_interval": "How often to fetch station status, in seconds. One request updates every entity."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "charging": {
+        "name": "Port {port} charging"
+      },
+      "online": {
+        "name": "Online"
+      },
+      "plugged_in": {
+        "name": "Port {port} plugged in"
+      },
+      "problem": {
+        "name": "Port {port} problem"
+      }
+    },
+    "button": {
+      "start": {
+        "name": "Port {port} start"
+      },
+      "stop": {
+        "name": "Port {port} stop"
+      }
+    },
+    "number": {
+      "current_limit": {
+        "name": "Port {port} current limit"
+      }
+    },
+    "sensor": {
+      "current": {
+        "name": "Port {port} current"
+      },
+      "current_l1": {
+        "name": "Port {port} current L1"
+      },
+      "current_l2": {
+        "name": "Port {port} current L2"
+      },
+      "current_l3": {
+        "name": "Port {port} current L3"
+      },
+      "current_limit": {
+        "name": "Port {port} active current limit"
+      },
+      "current_max": {
+        "name": "Port {port} max current"
+      },
+      "current_offered": {
+        "name": "Port {port} current offered"
+      },
+      "energy_total": {
+        "name": "Port {port} energy meter"
+      },
+      "power": {
+        "name": "Port {port} power"
+      },
+      "scenario": {
+        "name": "Port {port} scenario"
+      },
+      "session_energy": {
+        "name": "Port {port} session energy"
+      },
+      "soc": {
+        "name": "Port {port} vehicle battery"
+      },
+      "status": {
+        "name": "Port {port} status"
+      },
+      "temperature": {
+        "name": "Port {port} temperature"
+      },
+      "total_power": {
+        "name": "Total power"
+      },
+      "voltage": {
+        "name": "Port {port} voltage"
+      },
+      "voltage_l1": {
+        "name": "Port {port} voltage L1"
+      },
+      "voltage_l2": {
+        "name": "Port {port} voltage L2"
+      },
+      "voltage_l3": {
+        "name": "Port {port} voltage L3"
+      }
+    },
+    "switch": {
+      "charging": {
+        "name": "Port {port} charging"
+      }
+    }
+  },
+  "exceptions": {
+    "start_failed": {
+      "message": "Port {port}: could not start charging: {error}"
+    },
+    "stop_failed": {
+      "message": "Port {port}: could not stop charging: {error}"
+    },
+    "set_current_failed": {
+      "message": "Port {port}: could not set current limit: {error}"
+    }
+  }
+}
