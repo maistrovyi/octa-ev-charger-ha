@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EvConfigEntry, EvCoordinator
-from .entity import EvEntity, EvPortEntity, num
+from .entity import EvEntity, EvPortEntity, async_add_port_entities, num
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -169,10 +169,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
-    entities: list[SensorEntity] = [EvTotalPowerSensor(coordinator)]
-    for port_id in coordinator.port_ids:
-        entities.extend(EvPortSensor(coordinator, port_id, desc) for desc in PORT_SENSORS)
-    async_add_entities(entities)
+    async_add_entities([EvTotalPowerSensor(coordinator)])
+    async_add_port_entities(
+        entry,
+        async_add_entities,
+        lambda port: [EvPortSensor(coordinator, port, desc) for desc in PORT_SENSORS],
+    )
 
 
 class EvPortSensor(EvPortEntity, SensorEntity):

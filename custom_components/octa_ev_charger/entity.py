@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from typing import Any
 
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, PLUGGED_IN_STATUSES, PROBLEM_STATUSES
-from .coordinator import EvCoordinator
+from .const import DOMAIN, LOGGER, PLUGGED_IN_STATUSES, PROBLEM_STATUSES
+from .coordinator import EvConfigEntry, EvCoordinator
 
 
 def num(raw: Any) -> float | None:
@@ -39,6 +43,33 @@ def is_plugged_in(port: dict[str, Any] | None) -> bool | None:
 def has_problem(port: dict[str, Any] | None) -> bool | None:
     status = status_of(port)
     return None if status is None else status in PROBLEM_STATUSES
+
+
+def async_add_port_entities(
+    entry: EvConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    factory: Callable[[str], Iterable[Entity]],
+) -> None:
+    """Add a port's entities when the station first reports that port.
+
+    Runs at setup and after every poll, so a station that was offline at startup,
+    or that gains a port later, gets its entities without a restart. Ports that
+    disappear keep their entities, which then show as unavailable.
+    """
+    coordinator = entry.runtime_data
+    known: set[str] = set()
+
+    @callback
+    def _add_new_ports() -> None:
+        new = [port for port in coordinator.port_ids if port not in known]
+        if not new:
+            return
+        LOGGER.debug("Station %s: adding port(s) %s", coordinator.station_id, ", ".join(new))
+        known.update(new)
+        async_add_entities([entity for port in new for entity in factory(port)])
+
+    _add_new_ports()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_ports))
 
 
 class EvEntity(CoordinatorEntity[EvCoordinator]):

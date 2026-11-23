@@ -15,3 +15,4 @@ First public release.
 - Diagnostics download with server URL, station ID and token redacted.
 - English and Ukrainian translations for setup, entity names and error messages.
 - Octa brand icon (shown on Home Assistant 2026.3+).
+- Stations with any number of ports; ports are detected automatically, also after startup.

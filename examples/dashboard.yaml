@@ -5,6 +5,8 @@
 #    switch.ev_station_<station_id>_port_1_charging (dashes become underscores).
 # 2. Dashboard → ✏️ Edit → ✏️ on a view (or add one) → ⋮ → Edit in YAML → paste → Save.
 # 3. Single-phase charger? Change both gauges' `max: 22` to `max: 7.4`.
+# 4. Written for 2 ports. 1-port station: delete the "Port 2" section.
+#    3-port station: copy the "Port 2" section and replace port_2 with port_3.
 type: sections
 icon: mdi:ev-station
 path: ev

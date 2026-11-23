@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EvConfigEntry, EvCoordinator
-from .entity import EvEntity, EvPortEntity, has_problem, is_plugged_in
+from .entity import EvEntity, EvPortEntity, async_add_port_entities, has_problem, is_plugged_in
 
 
 def _charging(port: dict[str, Any]) -> bool | None:
@@ -55,12 +55,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
-    entities: list[BinarySensorEntity] = [EvOnlineSensor(coordinator)]
-    for port_id in coordinator.port_ids:
-        entities.extend(
-            EvPortBinarySensor(coordinator, port_id, desc) for desc in PORT_BINARY_SENSORS
-        )
-    async_add_entities(entities)
+    async_add_entities([EvOnlineSensor(coordinator)])
+    async_add_port_entities(
+        entry,
+        async_add_entities,
+        lambda port: [EvPortBinarySensor(coordinator, port, d) for d in PORT_BINARY_SENSORS],
+    )
 
 
 class EvOnlineSensor(EvEntity, BinarySensorEntity):

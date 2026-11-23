@@ -3,6 +3,7 @@
 # and replace `my_station` with your device's entity prefix
 # (entity IDs look like switch.ev_station_<station_id>_port_1_charging).
 # Notifications use persistent_notification; swap for notify.mobile_app_<phone> if you like.
+# Written for 2 ports: add or remove port_N entities in the trigger lists to match your station.
 
 automation ev_charger_examples:
   - id: ev_charger_p1_night_start

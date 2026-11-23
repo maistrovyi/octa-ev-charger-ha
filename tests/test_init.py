@@ -60,20 +60,3 @@ async def test_bad_token_starts_reauth(
     assert mock_entry.state is ConfigEntryState.SETUP_ERROR
     flows = hass.config_entries.flow.async_progress()
     assert [f["context"]["source"] for f in flows] == [SOURCE_REAUTH]
-
-
-async def test_default_ports_when_station_offline(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    entity_registry: er.EntityRegistry,
-    mock_entry: MockConfigEntry,
-) -> None:
-    """No 'ports' at startup: entities for ports 1 and 2 exist but are unavailable."""
-    aioclient_mock.get(STATUS_URL, json={"online": False})
-    mock_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_entry.runtime_data.port_ids == ["1", "2"]
-    assert hass.states.get("switch.ev_station_station_1_port_2_charging").state == "unavailable"
-    assert hass.states.get("binary_sensor.ev_station_station_1_online").state == "off"

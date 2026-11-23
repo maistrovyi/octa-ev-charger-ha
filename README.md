@@ -12,7 +12,8 @@ device with live readings, a charging switch and a current-limit slider per port
 
 - Set up from the UI. No YAML needed.
 - One HTTP request per poll updates every entity, every 30 s by default (configurable).
-- Works with any number of ports the station reports.
+- Stations with 1, 2 or 3 ports (or more): ports are detected automatically, including ones the
+  station reports only after startup, without a restart.
 - Lifetime energy meters plug straight into the **Energy** dashboard.
 - Re-authentication prompt when the token is rejected, and diagnostics with secrets redacted.
 - English and Ukrainian (українська) translations.
@@ -41,7 +42,8 @@ daily energy, built from Home Assistant's own cards (nothing extra to install):
 
 <img src="https://raw.githubusercontent.com/maistrovyi/octa-ev-charger-ha/main/docs/images/dashboard.png" alt="EV charging dashboard: header with live status, per-port charging toggle, power gauge, current and voltage, current limit slider, energy per day and power history">
 
-Copy [`examples/dashboard.yaml`](examples/dashboard.yaml), replace `my_station` with your station ID,
+Copy [`examples/dashboard.yaml`](examples/dashboard.yaml) (written for a 2-port station: delete the
+`Port 2` section for a 1-port station, or copy it as `Port 3` for a 3-port one), replace `my_station` with your station ID,
 then in Home Assistant open a dashboard → ✏️ **Edit** → ✏️ on a view (or add a new one) → ⋮ →
 **Edit in YAML**, paste and save. Cards that have nothing to show (car battery, session energy,
 faults) stay hidden until they do.
@@ -94,6 +96,10 @@ station `my-station`, the port 1 power sensor is `sensor.ev_station_my_station_p
 | Total power   | sensor (kW)   | Sum of all ports.                                       |
 
 **Per port** (`Port N …`)
+
+Every port the station reports gets the entities below on the same device. If the station is
+offline when Home Assistant starts, port entities appear as soon as it reports its ports. A port
+that disappears keeps its entities (shown as unavailable), so dashboards and history are not lost.
 
 | Entity               | Type             | Notes |
 |----------------------|------------------|-------|

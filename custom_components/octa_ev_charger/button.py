@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .api import EvApiError
 from .const import COMMAND_REFRESH_DELAY
 from .coordinator import EvConfigEntry, EvCoordinator
-from .entity import EvPortEntity
+from .entity import EvPortEntity, async_add_port_entities
 
 
 async def async_setup_entry(
@@ -20,10 +20,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
-    async_add_entities(
-        EvCommandButton(coordinator, port_id, start)
-        for port_id in coordinator.port_ids
-        for start in (True, False)
+    async_add_port_entities(
+        entry,
+        async_add_entities,
+        lambda port: [EvCommandButton(coordinator, port, start) for start in (True, False)],
     )
 
 

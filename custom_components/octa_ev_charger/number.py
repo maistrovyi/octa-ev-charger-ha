@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .api import EvApiError
 from .const import DEFAULT_MAX_CURRENT_A, MIN_CURRENT_A
 from .coordinator import EvConfigEntry, EvCoordinator
-from .entity import EvPortEntity, num
+from .entity import EvPortEntity, async_add_port_entities, num
 
 
 async def async_setup_entry(
@@ -19,7 +19,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
-    async_add_entities(EvCurrentLimit(coordinator, p) for p in coordinator.port_ids)
+    async_add_port_entities(
+        entry, async_add_entities, lambda port: [EvCurrentLimit(coordinator, port)]
+    )
 
 
 class EvCurrentLimit(EvPortEntity, NumberEntity):

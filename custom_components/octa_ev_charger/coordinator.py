@@ -14,7 +14,6 @@ from .api import EvApiError, EvAuthError, EvStationApi
 from .const import (
     CONF_SCAN_INTERVAL,
     CONF_STATION_ID,
-    DEFAULT_PORTS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
@@ -50,11 +49,11 @@ class EvCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @property
     def port_ids(self) -> list[str]:
-        """Ports reported by the station, sorted; defaults if none yet."""
+        """Ports the station reports right now, in numeric order ("1", "2", "10")."""
         ports = (self.data or {}).get("ports")
-        if isinstance(ports, dict) and ports:
-            return sorted(ports, key=lambda p: (len(p), p))
-        return list(DEFAULT_PORTS)
+        if not isinstance(ports, dict):
+            return []
+        return sorted(ports, key=lambda p: (not p.isdigit(), int(p) if p.isdigit() else 0, p))
 
     def port(self, port_id: str) -> dict[str, Any] | None:
         """Raw data for one port, or None."""
