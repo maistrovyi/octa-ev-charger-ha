@@ -1,7 +1,12 @@
 {
   "domain": "octa_ev_charger",
   "name": "Octa EV Charger",
-  "codeowners": ["@maistrovyi"],
+  "categories": [
+    "energy.ev_charging"
+  ],
+  "codeowners": [
+    "@maistrovyi"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/maistrovyi/octa-ev-charger-ha",
   "integration_type": "device",

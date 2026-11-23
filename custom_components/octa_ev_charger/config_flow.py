@@ -32,6 +32,7 @@ from .const import (
     CONF_TOKEN,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    EXAMPLE_URL,
     LOGGER,
     MIN_SCAN_INTERVAL,
 )
@@ -83,6 +84,7 @@ class EvConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(schema, user_input),
+            description_placeholders={"example_url": EXAMPLE_URL},
             errors=errors,
         )
 

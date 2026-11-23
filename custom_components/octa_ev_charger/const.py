@@ -14,6 +14,9 @@ CONF_SCAN_INTERVAL = "scan_interval"
 DEFAULT_SCAN_INTERVAL = 30  # seconds
 MIN_SCAN_INTERVAL = 10
 
+# Shown in the setup form. Kept out of translations: hassfest rejects URLs there.
+EXAMPLE_URL = "https://ev.example.com"
+
 # Fallback when the first poll has no "ports" (station offline at startup).
 DEFAULT_PORTS = ("1", "2")
 

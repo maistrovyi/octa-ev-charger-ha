@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import re
+import string
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -52,6 +53,49 @@ def test_same_keys_and_placeholders(lang: str) -> None:
     assert other.keys() == en.keys()
     for key, text in en.items():
         assert _placeholders(other[key]) == _placeholders(text), key
+
+
+# Same rules hassfest (script/hassfest/translations.py) applies, so CI failures show up locally.
+RE_URL = re.compile(
+    r"(((ftp|ftps|scp|http|https|mqtt|mqtts|socket|socks5):\/\/|www\.)"
+    r"[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?)",
+    re.IGNORECASE,
+)
+RE_HTML = re.compile(r"<[a-z].*?>", re.IGNORECASE)
+RE_KEY = re.compile(r"^(?!.+[_-]{2})(?![_-])[a-z0-9-_]+(?<![_-])$")
+
+
+def _hassfest_errors(value: str) -> list[str]:
+    errors = []
+    if RE_URL.search(value):
+        errors.append("contains a URL (use a description placeholder)")
+    if RE_HTML.search(value):
+        errors.append("contains HTML")
+    if value != value.strip():
+        errors.append("has leading/trailing spaces")
+    if re.search(r"'\{\w+\}'", value):
+        errors.append("placeholder inside single quotes")
+    if re.search(r"(.+\[%)|(%\].+)", value):
+        errors.append("combined translation reference")
+    for _, field, _, _ in string.Formatter().parse(value):
+        if field and not field.isidentifier():
+            errors.append(f"invalid placeholder {{{field}}}")
+    return errors
+
+
+@pytest.mark.parametrize("lang", LANGUAGES)
+def test_hassfest_rules(lang: str) -> None:
+    data = _load(COMPONENT / "translations" / f"{lang}.json")
+    problems = {k: e for k, v in _flatten(data).items() if (e := _hassfest_errors(v))}
+    assert not problems
+
+    for platform, entities in data["entity"].items():
+        for key in entities:
+            assert RE_KEY.match(key), f"entity.{platform}.{key}: invalid translation key"
+    for section in ("config", "options"):
+        for step_id, step in data[section]["step"].items():
+            extra = set(step.get("data_description", {})) - set(step.get("data", {}))
+            assert not extra, f"{section}.step.{step_id}: data_description without data: {extra}"
 
 
 async def test_ukrainian_names_keep_english_entity_ids(

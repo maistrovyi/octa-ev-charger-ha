@@ -10,7 +10,7 @@
           "token": "API-токен"
         },
         "data_description": {
-          "host": "Базова адреса сервера, наприклад https://ev.example.com",
+          "host": "Базова адреса сервера, наприклад {example_url}",
           "station_id": "Як у шляху API …/stations/STATION_ID/status",
           "token": "З префіксом \"Bearer \" або без нього. Для старту/стопу та ліміту струму потрібен токен рівня \"перегляд і керування\"."
         }

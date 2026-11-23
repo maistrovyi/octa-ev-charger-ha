@@ -30,6 +30,8 @@ async def _start(hass: HomeAssistant):
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # The example URL is passed as a placeholder (hassfest forbids URLs in translations).
+    assert result["description_placeholders"] == {"example_url": "https://ev.example.com"}
     return result
 
 

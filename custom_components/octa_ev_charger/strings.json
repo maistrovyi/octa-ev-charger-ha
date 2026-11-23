@@ -10,7 +10,7 @@
           "token": "API token"
         },
         "data_description": {
-          "host": "Base URL of the server, for example https://ev.example.com",
+          "host": "Base URL of the server, for example {example_url}",
           "station_id": "As it appears in the API path …/stations/STATION_ID/status",
           "token": "With or without the \"Bearer \" prefix. Start/stop and current limit need a view-and-control token."
         }
