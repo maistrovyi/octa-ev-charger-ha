@@ -1,0 +1,341 @@
+# Example dashboard view for the Octa EV Charger integration (see the README screenshot).
+# Built-in cards only, no extra installs.
+#
+# 1. Replace `my_station` with your station: entity IDs look like
+#    switch.ev_station_<station_id>_port_1_charging (dashes become underscores).
+# 2. Dashboard → ✏️ Edit → ✏️ on a view (or add one) → ⋮ → Edit in YAML → paste → Save.
+# 3. Single-phase charger? Change both gauges' `max: 22` to `max: 7.4`.
+type: sections
+icon: mdi:ev-station
+path: ev
+title: EV
+max_columns: 3
+header:
+  layout: responsive
+  badges_position: bottom
+  card:
+    type: markdown
+    text_only: true
+    content: |
+      # ⚡ EV charging
+
+      {% set p = states('sensor.ev_station_my_station_total_power') | float(0) %}
+      {%- if p > 0 -%}
+      Charging at **{{ p | round(1) }} kW** right now
+      {%- elif is_state('binary_sensor.ev_station_my_station_port_1_plugged_in', 'on')
+            or is_state('binary_sensor.ev_station_my_station_port_2_plugged_in', 'on') -%}
+      A car is plugged in and waiting
+      {%- else -%}
+      Both ports are free
+      {%- endif %}
+badges:
+- type: entity
+  entity: binary_sensor.ev_station_my_station_online
+  show_state: true
+  color: green
+- type: entity
+  entity: sensor.ev_station_my_station_total_power
+  show_state: true
+  color: amber
+- type: entity
+  entity: binary_sensor.ev_station_my_station_port_1_problem
+  show_state: true
+  color: red
+  visibility:
+  - condition: state
+    entity: binary_sensor.ev_station_my_station_port_1_problem
+    state: 'on'
+- type: entity
+  entity: binary_sensor.ev_station_my_station_port_2_problem
+  show_state: true
+  color: red
+  visibility:
+  - condition: state
+    entity: binary_sensor.ev_station_my_station_port_2_problem
+    state: 'on'
+sections:
+- type: grid
+  cards:
+  - type: heading
+    heading: Port 1
+    icon: mdi:ev-plug-type2
+    badges:
+    - type: entity
+      entity: sensor.ev_station_my_station_port_1_status
+      show_state: true
+      color: blue
+    - type: entity
+      entity: binary_sensor.ev_station_my_station_port_1_plugged_in
+      show_state: true
+      color: green
+  - type: tile
+    entity: switch.ev_station_my_station_port_1_charging
+    name: Charging
+    color: green
+    features_position: inline
+    features:
+    - type: toggle
+    grid_options:
+      columns: full
+  - type: tile
+    entity: binary_sensor.ev_station_my_station_port_1_problem
+    name: Port reports a fault
+    color: red
+    grid_options:
+      columns: full
+    visibility:
+    - condition: state
+      entity: binary_sensor.ev_station_my_station_port_1_problem
+      state: 'on'
+  - type: gauge
+    entity: sensor.ev_station_my_station_port_1_power
+    name: Power
+    min: 0
+    max: 22
+    needle: true
+    segments:
+    - from: 0
+      color: '#4a90d9'
+    - from: 3.7
+      color: '#43a047'
+    - from: 11
+      color: '#fbc02d'
+    - from: 19
+      color: '#e53935'
+    grid_options:
+      columns: 6
+      rows: 3
+  - type: tile
+    entity: sensor.ev_station_my_station_port_1_session_energy
+    name: This session
+    icon: mdi:lightning-bolt
+    color: amber
+    vertical: true
+    grid_options:
+      columns: 6
+      rows: 3
+    visibility:
+    - condition: state
+      entity: sensor.ev_station_my_station_port_1_session_energy
+      state_not:
+      - unknown
+      - unavailable
+  - type: tile
+    entity: sensor.ev_station_my_station_port_1_vehicle_battery
+    name: Car battery
+    color: green
+    features:
+    - type: bar-gauge
+      min: 0
+      max: 100
+    grid_options:
+      columns: full
+    visibility:
+    - condition: state
+      entity: sensor.ev_station_my_station_port_1_vehicle_battery
+      state_not:
+      - unknown
+      - unavailable
+  - type: tile
+    entity: sensor.ev_station_my_station_port_1_current
+    name: Current
+    color: blue
+    features:
+    - type: trend-graph
+      hours_to_show: 6
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: sensor.ev_station_my_station_port_1_voltage
+    name: Voltage
+    color: purple
+    features:
+    - type: trend-graph
+      hours_to_show: 6
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: number.ev_station_my_station_port_1_current_limit
+    name: Current limit
+    icon: mdi:current-ac
+    color: cyan
+    features:
+    - type: numeric-input
+      style: slider
+    grid_options:
+      columns: full
+  - type: tile
+    entity: sensor.ev_station_my_station_port_1_max_current
+    name: Max
+    color: grey
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: sensor.ev_station_my_station_port_1_energy_meter
+    name: Lifetime
+    color: amber
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: sensor.ev_station_my_station_port_1_current_offered
+    name: Offered
+    color: grey
+    grid_options:
+      columns: 6
+- type: grid
+  cards:
+  - type: heading
+    heading: Port 2
+    icon: mdi:ev-plug-type2
+    badges:
+    - type: entity
+      entity: sensor.ev_station_my_station_port_2_status
+      show_state: true
+      color: blue
+    - type: entity
+      entity: binary_sensor.ev_station_my_station_port_2_plugged_in
+      show_state: true
+      color: green
+  - type: tile
+    entity: switch.ev_station_my_station_port_2_charging
+    name: Charging
+    color: green
+    features_position: inline
+    features:
+    - type: toggle
+    grid_options:
+      columns: full
+  - type: tile
+    entity: binary_sensor.ev_station_my_station_port_2_problem
+    name: Port reports a fault
+    color: red
+    grid_options:
+      columns: full
+    visibility:
+    - condition: state
+      entity: binary_sensor.ev_station_my_station_port_2_problem
+      state: 'on'
+  - type: gauge
+    entity: sensor.ev_station_my_station_port_2_power
+    name: Power
+    min: 0
+    max: 22
+    needle: true
+    segments:
+    - from: 0
+      color: '#4a90d9'
+    - from: 3.7
+      color: '#43a047'
+    - from: 11
+      color: '#fbc02d'
+    - from: 19
+      color: '#e53935'
+    grid_options:
+      columns: 6
+      rows: 3
+  - type: tile
+    entity: sensor.ev_station_my_station_port_2_session_energy
+    name: This session
+    icon: mdi:lightning-bolt
+    color: amber
+    vertical: true
+    grid_options:
+      columns: 6
+      rows: 3
+    visibility:
+    - condition: state
+      entity: sensor.ev_station_my_station_port_2_session_energy
+      state_not:
+      - unknown
+      - unavailable
+  - type: tile
+    entity: sensor.ev_station_my_station_port_2_vehicle_battery
+    name: Car battery
+    color: green
+    features:
+    - type: bar-gauge
+      min: 0
+      max: 100
+    grid_options:
+      columns: full
+    visibility:
+    - condition: state
+      entity: sensor.ev_station_my_station_port_2_vehicle_battery
+      state_not:
+      - unknown
+      - unavailable
+  - type: tile
+    entity: sensor.ev_station_my_station_port_2_current
+    name: Current
+    color: blue
+    features:
+    - type: trend-graph
+      hours_to_show: 6
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: sensor.ev_station_my_station_port_2_voltage
+    name: Voltage
+    color: purple
+    features:
+    - type: trend-graph
+      hours_to_show: 6
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: number.ev_station_my_station_port_2_current_limit
+    name: Current limit
+    icon: mdi:current-ac
+    color: cyan
+    features:
+    - type: numeric-input
+      style: slider
+    grid_options:
+      columns: full
+  - type: tile
+    entity: sensor.ev_station_my_station_port_2_max_current
+    name: Max
+    color: grey
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: sensor.ev_station_my_station_port_2_energy_meter
+    name: Lifetime
+    color: amber
+    grid_options:
+      columns: 6
+  - type: tile
+    entity: sensor.ev_station_my_station_port_2_current_offered
+    name: Offered
+    color: grey
+    grid_options:
+      columns: 6
+- type: grid
+  cards:
+  - type: heading
+    heading: Energy
+    icon: mdi:chart-bar
+  - type: statistics-graph
+    title: Energy per day
+    chart_type: bar
+    period: day
+    days_to_show: 14
+    stat_types:
+    - change
+    entities:
+    - entity: sensor.ev_station_my_station_port_1_energy_meter
+      name: Port 1
+    - entity: sensor.ev_station_my_station_port_2_energy_meter
+      name: Port 2
+    grid_options:
+      columns: full
+  - type: history-graph
+    title: Power, last 24 h
+    hours_to_show: 24
+    entities:
+    - entity: sensor.ev_station_my_station_port_1_power
+      name: Port 1
+    - entity: sensor.ev_station_my_station_port_2_power
+      name: Port 2
+    grid_options:
+      columns: full

@@ -1,4 +1,4 @@
-<img src="custom_components/octa_ev_charger/brand/icon@2x.png" alt="Octa" width="96" align="right">
+<img src="https://raw.githubusercontent.com/maistrovyi/octa-ev-charger-ha/main/custom_components/octa_ev_charger/brand/icon@2x.png" alt="Octa" width="96" align="right">
 
 # Octa EV Charger for Home Assistant
 
@@ -16,6 +16,35 @@ device with live readings, a charging switch and a current-limit slider per port
 - Lifetime energy meters plug straight into the **Energy** dashboard.
 - Re-authentication prompt when the token is rejected, and diagnostics with secrets redacted.
 - English and Ukrainian (українська) translations.
+
+## Screenshots
+
+The station's device page in Home Assistant:
+
+<table>
+  <tr>
+    <td valign="top" width="50%">
+      <img src="https://raw.githubusercontent.com/maistrovyi/octa-ev-charger-ha/main/docs/images/controls.png" alt="Controls: a charging switch per port">
+      <br><br>
+      <img src="https://raw.githubusercontent.com/maistrovyi/octa-ev-charger-ha/main/docs/images/configuration-diagnostic.png" alt="Configuration: current limit sliders. Diagnostic: online, current limits, problem, scenario, temperature">
+    </td>
+    <td valign="top" width="50%">
+      <img src="https://raw.githubusercontent.com/maistrovyi/octa-ev-charger-ha/main/docs/images/sensors.png" alt="Sensors: charging, plugged in, status, power, current, voltage, energy per port, and total power">
+    </td>
+  </tr>
+</table>
+
+## Dashboard
+
+A ready-made dashboard view with live status, start/stop, power gauges, current limit sliders and
+daily energy, built from Home Assistant's own cards (nothing extra to install):
+
+<img src="https://raw.githubusercontent.com/maistrovyi/octa-ev-charger-ha/main/docs/images/dashboard.png" alt="EV charging dashboard: header with live status, per-port charging toggle, power gauge, current and voltage, current limit slider, energy per day and power history">
+
+Copy [`examples/dashboard.yaml`](examples/dashboard.yaml), replace `my_station` with your station ID,
+then in Home Assistant open a dashboard → ✏️ **Edit** → ✏️ on a view (or add a new one) → ⋮ →
+**Edit in YAML**, paste and save. Cards that have nothing to show (car battery, session energy,
+faults) stay hidden until they do.
 
 ## Requirements
 
