@@ -1,9 +1,9 @@
 name: Validate
 
+# Pushes to main run this through release.yml (validation gates the release).
 on:
-  push:
-    branches: [main]
   pull_request:
+  workflow_call:
   schedule:
     - cron: "17 4 * * 1" # weekly, catches new HA/HACS rules
   workflow_dispatch:

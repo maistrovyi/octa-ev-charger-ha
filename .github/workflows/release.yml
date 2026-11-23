@@ -1,0 +1,65 @@
+name: Release
+
+# Every push to main: run tests and validation, then tag the next CalVer
+# version (YY.MM.PATCH, baseline from manifest.json) and publish a release.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+
+  validate:
+    uses: ./.github/workflows/validate.yml
+
+  release:
+    needs: [tests, validate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create tags and releases
+    # One release at a time so two pushes never compute the same version.
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # all tags
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      - name: Work out version
+        id: version
+        run: |
+          existing="$(git tag --points-at HEAD | grep -E '^[0-9]{2}\.[0-9]{1,2}\.[0-9]+$' || true)"
+          if [ -n "$existing" ]; then
+            echo "Commit already released as $existing, nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            version="$(python script/release.py next-version)"
+            echo "Releasing $version"
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build zip
+        if: steps.version.outputs.skip != 'true'
+        run: python script/release.py build "${{ steps.version.outputs.version }}"
+
+      - name: Tag and publish release
+        if: steps.version.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "$VERSION" dist/octa_ev_charger.zip \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --generate-notes \
+            --latest

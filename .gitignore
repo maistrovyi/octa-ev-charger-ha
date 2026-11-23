@@ -9,6 +9,7 @@ venv/
 .coverage.*
 htmlcov/
 *.egg-info/
+dist/
 
 # Editors / OS
 .idea/

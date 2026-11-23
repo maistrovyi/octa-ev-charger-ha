@@ -1,9 +1,9 @@
 name: Tests
 
+# Pushes to main run this through release.yml (tests gate the release).
 on:
-  push:
-    branches: [main]
   pull_request:
+  workflow_call:
   workflow_dispatch:
 
 permissions:

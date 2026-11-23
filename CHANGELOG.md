@@ -1,6 +1,9 @@
 # Changelog
 
-## 1.0.0
+Release notes for every version are generated automatically on the
+[GitHub Releases](https://github.com/maistrovyi/octa-ev-charger-ha/releases) page.
+
+## 26.11.0
 
 First public release.
 

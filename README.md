@@ -1,7 +1,7 @@
 # Octa EV Charger for Home Assistant
 
-[![Tests](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/tests.yml/badge.svg)](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/tests.yml)
-[![Validate](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/validate.yml/badge.svg)](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/validate.yml)
+[![Release](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/release.yml/badge.svg)](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/maistrovyi/octa-ev-charger-ha)](https://github.com/maistrovyi/octa-ev-charger-ha/releases/latest)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
 
 Custom integration that connects an EV charging station to Home Assistant through the station's
@@ -31,8 +31,9 @@ device with live readings, a charging switch and a current-limit slider per port
 
 ### Manual
 
-1. Download the latest release and copy `custom_components/octa_ev_charger/` into your
-   `/config/custom_components/` folder.
+1. Download `octa_ev_charger.zip` from the
+   [latest release](https://github.com/maistrovyi/octa-ev-charger-ha/releases/latest) and unzip it
+   into `/config/custom_components/octa_ev_charger/`.
 2. Restart Home Assistant.
 
 ## Configuration
@@ -144,10 +145,32 @@ ruff check . && ruff format --check .
 pytest --cov
 ```
 
-CI runs the tests on the newest Home Assistant supported by
+Pull requests run the tests on the newest Home Assistant supported by
 [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component)
 and on the oldest supported release (2025.8, Python 3.13), plus `hassfest` and the HACS
 validator. Code must stay Python 3.13-compatible, which ruff enforces via `target-version`.
+
+### Versioning and releases
+
+Versions are calendar-based: `YY.MM.PATCH`, for example `26.11.3`.
+
+- The **baseline** (`YY.MM`) is the `version` in
+  [`manifest.json`](custom_components/octa_ev_charger/manifest.json), kept at patch `0`
+  (`26.11.0`).
+- **Every push to `main`** runs the tests and validation. If they pass, the
+  [Release workflow](.github/workflows/release.yml) tags the commit with the next free patch
+  (`26.11.0`, `26.11.1`, …) and publishes a GitHub release with generated notes and
+  `octa_ev_charger.zip`. The zip's manifest carries that exact version.
+- **To start a new series,** change the manifest version to e.g. `26.12.0` and push. Patches
+  restart at `26.12.0`.
+- Re-running the workflow on an already-released commit does nothing.
+
+The logic is in [`script/release.py`](script/release.py) and covered by `tests/test_release.py`:
+
+```bash
+python script/release.py next-version   # what the next push would release
+python script/release.py build 26.11.5  # build dist/octa_ev_charger.zip locally
+```
 
 ## License
 
