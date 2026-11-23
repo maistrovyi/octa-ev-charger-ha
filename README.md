@@ -1,3 +1,5 @@
+<img src="custom_components/octa_ev_charger/brand/icon@2x.png" alt="Octa" width="96" align="right">
+
 # Octa EV Charger for Home Assistant
 
 [![Release](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/release.yml/badge.svg)](https://github.com/maistrovyi/octa-ev-charger-ha/actions/workflows/release.yml)
@@ -17,7 +19,8 @@ device with live readings, a charging switch and a current-limit slider per port
 
 ## Requirements
 
-- Home Assistant **2025.8** or newer.
+- Home Assistant **2025.8** or newer. The Octa icon on the integration card needs **2026.3** or
+  newer; older versions work the same but show a generic icon.
 - The server URL, your station ID and an API token. Reading values needs a *view* token;
   start/stop and current limit need a *view and control* token.
 

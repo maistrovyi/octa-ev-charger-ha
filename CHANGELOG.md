@@ -14,3 +14,4 @@ First public release.
 - Configurable polling interval (default 30 s).
 - Diagnostics download with server URL, station ID and token redacted.
 - English and Ukrainian translations for setup, entity names and error messages.
+- Octa brand icon (shown on Home Assistant 2026.3+).

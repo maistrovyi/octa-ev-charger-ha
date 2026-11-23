@@ -89,6 +89,7 @@ def test_build_zip_of_real_integration(tmp_path: Path) -> None:
         names = zf.namelist()
         assert "manifest.json" in names
         assert "translations/uk.json" in names
+        assert {"brand/icon.png", "brand/icon@2x.png"} <= set(names)
         assert all("__pycache__" not in n for n in names)
         assert json.loads(zf.read("manifest.json"))["domain"] == "octa_ev_charger"
 
