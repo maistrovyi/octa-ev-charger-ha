@@ -28,8 +28,9 @@ async def test_all_entities_on_one_device(
     init_integration: MockConfigEntry,
 ) -> None:
     entities = er.async_entries_for_config_entry(entity_registry, init_integration.entry_id)
-    # 1 online + 1 total power + per port: 3 binary, 18 sensors, switch, number, 2 buttons
-    assert len(entities) == 2 + 2 * (3 + 18 + 1 + 1 + 2)
+    # 1 online + 1 total power + per port: 3 binary, 18 sensors, switch, number, 2 buttons,
+    # minus port 2's vehicle battery: the sample never reports it, so it gets no entity.
+    assert len(entities) == 2 + 2 * (3 + 18 + 1 + 1 + 2) - 1
     assert {e.device_id for e in entities} == {entities[0].device_id}
 
     devices = dr.async_entries_for_config_entry(device_registry, init_integration.entry_id)

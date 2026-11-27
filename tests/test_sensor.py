@@ -36,7 +36,6 @@ from .conftest import eid, refresh_with
         ("total_power", "7.2", "kW"),
         # nulls in the payload become "unknown", never 0
         ("port_2_voltage", STATE_UNKNOWN, "V"),
-        ("port_2_vehicle_battery", STATE_UNKNOWN, "%"),
         ("port_2_session_energy", STATE_UNKNOWN, "kWh"),
         ("port_2_scenario", STATE_UNKNOWN, None),
     ],

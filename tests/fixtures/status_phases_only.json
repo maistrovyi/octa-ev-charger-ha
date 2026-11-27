@@ -1,0 +1,130 @@
+{
+  "station_id": "station-1",
+  "online": true,
+  "updated_at": "2026-11-25T23:01:19.997Z",
+  "port_count": 2,
+  "ports": {
+    "1": {
+      "port": 1,
+      "status": "Available",
+      "charging": false,
+      "current_limit_a": null,
+      "current_max_a": 32,
+      "command_pending": false,
+      "pending_operation_id": null,
+      "scenario": "off",
+      "session_started_at": null,
+      "session_energy_kwh": null,
+      "energy_total_kwh": 22.389,
+      "power_kw": {
+        "value": 0,
+        "received_at": null
+      },
+      "current_a": {
+        "value": 0,
+        "received_at": null
+      },
+      "current_l1_a": {
+        "value": 0,
+        "received_at": null
+      },
+      "current_l2_a": {
+        "value": 0,
+        "received_at": null
+      },
+      "current_l3_a": {
+        "value": 0,
+        "received_at": null
+      },
+      "voltage_v": {
+        "value": null,
+        "received_at": null
+      },
+      "voltage_l1_v": {
+        "value": 233.095,
+        "received_at": "2026-11-25T23:00:42.686Z"
+      },
+      "voltage_l2_v": {
+        "value": 230.011,
+        "received_at": "2026-11-25T23:00:42.686Z"
+      },
+      "voltage_l3_v": {
+        "value": 228.203,
+        "received_at": "2026-11-25T23:00:42.686Z"
+      },
+      "current_offered_a": {
+        "value": 0,
+        "received_at": "2026-11-25T23:00:42.686Z"
+      },
+      "temperature_c": {
+        "value": null,
+        "received_at": null
+      },
+      "soc_percent": {
+        "value": null,
+        "received_at": null
+      }
+    },
+    "2": {
+      "port": 2,
+      "status": "Charging",
+      "charging": true,
+      "current_limit_a": null,
+      "current_max_a": 32,
+      "command_pending": false,
+      "pending_operation_id": null,
+      "scenario": "off",
+      "session_started_at": "2026-11-25T21:00:01.000Z",
+      "session_energy_kwh": 14.2,
+      "energy_total_kwh": 14.2,
+      "power_kw": {
+        "value": 7.018,
+        "received_at": "2026-11-25T23:00:41.722Z"
+      },
+      "current_a": {
+        "value": null,
+        "received_at": null
+      },
+      "current_l1_a": {
+        "value": 15.584,
+        "received_at": "2026-11-25T23:00:41.722Z"
+      },
+      "current_l2_a": {
+        "value": 15.51,
+        "received_at": "2026-11-25T23:00:41.722Z"
+      },
+      "current_l3_a": {
+        "value": 0.01,
+        "received_at": "2026-11-25T23:00:41.722Z"
+      },
+      "voltage_v": {
+        "value": null,
+        "received_at": null
+      },
+      "voltage_l1_v": {
+        "value": 227.562,
+        "received_at": "2026-11-25T23:00:41.722Z"
+      },
+      "voltage_l2_v": {
+        "value": 227.961,
+        "received_at": "2026-11-25T23:00:41.722Z"
+      },
+      "voltage_l3_v": {
+        "value": 230.717,
+        "received_at": "2026-11-25T23:00:41.722Z"
+      },
+      "current_offered_a": {
+        "value": 32,
+        "received_at": "2026-11-25T23:00:41.722Z"
+      },
+      "temperature_c": {
+        "value": null,
+        "received_at": null
+      },
+      "soc_percent": {
+        "value": null,
+        "received_at": null
+      }
+    }
+  }
+}

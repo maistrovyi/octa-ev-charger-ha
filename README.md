@@ -110,15 +110,15 @@ that disappears keeps its entities (shown as unavailable), so dashboards and his
 | problem              | binary sensor    | `Faulted` or `Unavailable`. Diagnostic. |
 | status               | sensor           | Raw status text, e.g. `Charging`. |
 | power                | sensor (kW)      | |
-| current              | sensor (A)       | |
+| current              | sensor (A)       | The station's total; if it only reports phases, the highest phase current. |
 | current offered      | sensor (A)       | What the station currently allows the car to draw. |
-| voltage              | sensor (V)       | |
-| vehicle battery      | sensor (%)       | Only if the car reports it. |
+| voltage              | sensor (V)       | The station's value; if it only reports phases, their average. |
+| vehicle battery      | sensor (%)       | Appears once the car reports it. Many cars never do over AC charging (e.g. VW e-Golf). |
 | session energy       | sensor (kWh)     | Resets each session. |
 | energy meter         | sensor (kWh)     | Lifetime total; use this in the Energy dashboard. |
 | active current limit | sensor (A)       | Saved limit, or the port maximum if none is saved. Diagnostic. |
 | max current          | sensor (A)       | Hardware maximum. Diagnostic. |
-| temperature          | sensor (°C)      | Diagnostic. |
+| temperature          | sensor (°C)      | Diagnostic. Appears once the station reports it. |
 | scenario             | sensor           | Diagnostic. |
 | current L1–L3, voltage L1–L3 | sensors  | Disabled by default. Enable them on the device page. |
 | start, stop          | buttons          | Disabled by default; the switch does the same. |

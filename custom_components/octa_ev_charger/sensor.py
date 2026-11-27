@@ -33,6 +33,9 @@ class EvPortSensorDescription(SensorEntityDescription):
     """Port sensor: how to read its value from the port's JSON."""
 
     value_fn: Callable[[dict[str, Any]], Any]
+    # Optional readings (e.g. vehicle battery) get an entity only once the station
+    # has reported a value; many cars and stations never send them.
+    only_when_reported: bool = False
 
 
 def _field(key: str) -> Callable[[dict[str, Any]], float | None]:
@@ -41,6 +44,27 @@ def _field(key: str) -> Callable[[dict[str, Any]], float | None]:
 
 def _text(key: str) -> Callable[[dict[str, Any]], str | None]:
     return lambda port: port[key] if isinstance(port.get(key), str) else None
+
+
+def _phases(port: dict[str, Any], template: str) -> list[float]:
+    values = (num(port.get(template.format(n))) for n in (1, 2, 3))
+    return [v for v in values if v is not None]
+
+
+def _current(port: dict[str, Any]) -> float | None:
+    """Total current, or the highest phase current when the station only reports phases."""
+    if (total := num(port.get("current_a"))) is not None:
+        return total
+    phases = _phases(port, "current_l{}_a")
+    return max(phases) if phases else None
+
+
+def _voltage(port: dict[str, Any]) -> float | None:
+    """Voltage, or the average of the reported phase voltages."""
+    if (total := num(port.get("voltage_v"))) is not None:
+        return total
+    phases = _phases(port, "voltage_l{}_v")
+    return round(sum(phases) / len(phases), 1) if phases else None
 
 
 def _limit(port: dict[str, Any]) -> float | None:
@@ -74,7 +98,7 @@ PORT_SENSORS: tuple[EvPortSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_field("power_kw"),
     ),
-    EvPortSensorDescription(key="current", value_fn=_field("current_a"), **_CURRENT),
+    EvPortSensorDescription(key="current", value_fn=_current, **_CURRENT),
     EvPortSensorDescription(
         key="current_l1",
         value_fn=_field("current_l1_a"),
@@ -112,7 +136,7 @@ PORT_SENSORS: tuple[EvPortSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_field("current_max_a"),
     ),
-    EvPortSensorDescription(key="voltage", value_fn=_field("voltage_v"), **_VOLTAGE),
+    EvPortSensorDescription(key="voltage", value_fn=_voltage, **_VOLTAGE),
     EvPortSensorDescription(
         key="voltage_l1",
         value_fn=_field("voltage_l1_v"),
@@ -138,6 +162,7 @@ PORT_SENSORS: tuple[EvPortSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_field("temperature_c"),
+        only_when_reported=True,
     ),
     EvPortSensorDescription(
         key="soc",
@@ -145,6 +170,7 @@ PORT_SENSORS: tuple[EvPortSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_field("soc_percent"),
+        only_when_reported=True,
     ),
     EvPortSensorDescription(
         key="session_energy",
@@ -173,8 +199,17 @@ async def async_setup_entry(
     async_add_port_entities(
         entry,
         async_add_entities,
-        lambda port: [EvPortSensor(coordinator, port, desc) for desc in PORT_SENSORS],
+        lambda port: [
+            EvPortSensor(coordinator, port, desc)
+            for desc in PORT_SENSORS
+            if not desc.only_when_reported or _reported(coordinator, port, desc)
+        ],
     )
+
+
+def _reported(coordinator: EvCoordinator, port_id: str, desc: EvPortSensorDescription) -> bool:
+    port = coordinator.port(port_id)
+    return port is not None and desc.value_fn(port) is not None
 
 
 class EvPortSensor(EvPortEntity, SensorEntity):

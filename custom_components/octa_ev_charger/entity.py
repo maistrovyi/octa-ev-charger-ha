@@ -50,26 +50,38 @@ def async_add_port_entities(
     async_add_entities: AddConfigEntryEntitiesCallback,
     factory: Callable[[str], Iterable[Entity]],
 ) -> None:
-    """Add a port's entities when the station first reports that port.
+    """Add per-port entities as soon as the station reports what they need.
 
-    Runs at setup and after every poll, so a station that was offline at startup,
-    or that gains a port later, gets its entities without a restart. Ports that
-    disappear keep their entities, which then show as unavailable.
+    Runs at setup and after every poll. `factory(port)` returns the entities that
+    port should have right now; any not added yet are added. So a station that was
+    offline at startup, a port that appears later, or a reading the station only
+    starts sending later (e.g. vehicle battery) gets its entity without a restart.
+    Entities are never removed: a port or reading that disappears shows as
+    unavailable or unknown, so dashboards and history stay intact.
     """
     coordinator = entry.runtime_data
     known: set[str] = set()
 
     @callback
-    def _add_new_ports() -> None:
-        new = [port for port in coordinator.port_ids if port not in known]
+    def _add_new_entities() -> None:
+        new = [
+            entity
+            for port in coordinator.port_ids
+            for entity in factory(port)
+            if entity.unique_id not in known
+        ]
         if not new:
             return
-        LOGGER.debug("Station %s: adding port(s) %s", coordinator.station_id, ", ".join(new))
-        known.update(new)
-        async_add_entities([entity for port in new for entity in factory(port)])
+        LOGGER.debug(
+            "Station %s: adding %s",
+            coordinator.station_id,
+            ", ".join(str(entity.unique_id) for entity in new),
+        )
+        known.update(str(entity.unique_id) for entity in new)
+        async_add_entities(new)
 
-    _add_new_ports()
-    entry.async_on_unload(coordinator.async_add_listener(_add_new_ports))
+    _add_new_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
 
 
 class EvEntity(CoordinatorEntity[EvCoordinator]):
